@@ -90,9 +90,11 @@ A comprehensive AI-powered DNA forensic analysis platform with advanced features
    ```
 
 4. **Access the Application**
-   - Web Interface: http://localhost:5000
-   - Dashboard: http://localhost:5000/dashboard
-   - History: http://localhost:5000/history
+   - Web Interface: `http://localhost:5000`
+   - Dashboard: `http://localhost:5000/dashboard`
+   - History: `http://localhost:5000/history`
+   
+   **Note:** These are local URLs that work only when running the application on your machine.
 
 ## 📖 Usage Guide
 
