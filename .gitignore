@@ -33,8 +33,9 @@ audio/
 .DS_Store
 Thumbs.db
 
-# Model files (if too large)
-*.pkl
+# Model files (too large for GitHub - use Git LFS or download separately)
+model/best_model.pkl
+model/scaler.pkl
 
 # Logs
 *.log
