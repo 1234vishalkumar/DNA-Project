@@ -268,7 +268,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 **Venika**
 - 🧬 DNA Forensics Specialist
 - 🤖 AI/ML Engineer
-- 📧 Contact: [Your Email]
+- 📧 Contact: 
 - 🌐 Portfolio: [Your Website]
 
 ## 🙏 Acknowledgments
@@ -292,15 +292,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📞 Support
 
-For support, email [your-email] or create an issue in the repository.
+For support, email:vk3785940@gmail.com or create an issue in the repository.
 
-## 🏆 Awards & Recognition
-
-- 🥇 Best DNA Analysis Tool 2025
-- 🏅 Innovation in Forensic Technology
-- 🎖️ AI Excellence Award
-
----
 
 **Made with ❤️ for the forensic science community**
 
