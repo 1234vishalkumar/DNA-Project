@@ -74,9 +74,10 @@ A comprehensive AI-powered DNA forensic analysis platform with advanced features
 
 ### Installation & Setup
 
-1. **Clone/Download the Project**
+1. **Clone the Project**
    ```bash
-   cd DNA_MATCHING_PROJECT
+   git clone https://github.com/1234vishalkumar/DNA-Project.git
+   cd DNA-Project
    ```
 
 2. **Install Dependencies**
