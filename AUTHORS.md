@@ -11,8 +11,6 @@
 - Role: Full Stack Developer & System Architect
 - Contributions: AI and features development, system integration, backend development, deployment architecture
 
-### Contributors
-
 **Sandhya**
 - Role: Developer
 - Contributions: Project development and implementation
