@@ -227,7 +227,7 @@ python -c "from utils import *; test_function()"
 - **Memory Management**: Efficient data structures
 - **Database Indexing**: Fast query performance
 
-## 🌍 Deployment Options
+##  Deployment Options
 
 ### Local Development
 ```bash
@@ -251,7 +251,7 @@ docker run -p 5000:5000 dna-forensics
 - **Render**: Free tier available
 - **AWS/GCP/Azure**: Enterprise deployment
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/AmazingFeature`)
@@ -259,7 +259,7 @@ docker run -p 5000:5000 dna-forensics
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Open Pull Request
 
-## 📝 License
+##  License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
