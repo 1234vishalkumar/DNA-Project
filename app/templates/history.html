@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 Analysis History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 DNA Analysis History</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">🏠 Home</a>
+                <a href="{{ url_for('dashboard') }}">📈 Dashboard</a>
+            </nav>
+        </header>
+
+        <div class="history-container">
+            <div class="search-filters">
+                <input type="text" id="searchInput" placeholder="🔍 Search by investigator, sample, or prediction...">
+                <select id="confidenceFilter">
+                    <option value="">All Confidence Levels</option>
+                    <option value="high">High Confidence (>80%)</option>
+                    <option value="medium">Medium Confidence (50-80%)</option>
+                    <option value="low">Low Confidence (<50%)</option>
+                </select>
+            </div>
+
+            <table class="data-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Investigator</th>
+                        <th>Sample Name</th>
+                        <th>DNA Sequence (Preview)</th>
+                        <th>Prediction</th>
+                        <th>Confidence</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for analysis in history %}
+                    <tr data-confidence="{{ analysis[6] if analysis[6] else 0 }}">
+                        <td>{{ analysis[0] }}</td>
+                        <td>{{ analysis[1] }}</td>
+                        <td>{{ analysis[2] }}</td>
+                        <td>{{ analysis[3] }}</td>
+                        <td>{{ analysis[4][:50] + '...' if analysis[4] and analysis[4]|length > 50 else analysis[4] }}</td>
+                        <td>{{ analysis[5] }}</td>
+                        <td>
+                            <span class="confidence-badge {{ 'high' if analysis[6] and analysis[6] > 0.8 else 'medium' if analysis[6] and analysis[6] > 0.5 else 'low' }}">
+                                {{ "%.1f"|format(analysis[6] * 100) if analysis[6] else 'N/A' }}%
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="viewDetails({{ analysis[0] }})" class="btn-small">👁️ View</button>
+                            <button onclick="generateReport({{ analysis[0] }})" class="btn-small">📄 Report</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterTable();
+        });
+
+        document.getElementById('confidenceFilter').addEventListener('change', function() {
+            filterTable();
+        });
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const confidenceFilter = document.getElementById('confidenceFilter').value;
+            const rows = document.querySelectorAll('#historyTable tbody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const confidence = parseFloat(row.dataset.confidence);
+                
+                let matchesSearch = text.includes(searchTerm);
+                let matchesConfidence = true;
+
+                if (confidenceFilter === 'high') {
+                    matchesConfidence = confidence > 0.8;
+                } else if (confidenceFilter === 'medium') {
+                    matchesConfidence = confidence >= 0.5 && confidence <= 0.8;
+                } else if (confidenceFilter === 'low') {
+                    matchesConfidence = confidence < 0.5;
+                }
+
+                row.style.display = (matchesSearch && matchesConfidence) ? '' : 'none';
+            });
+        }
+
+        function viewDetails(id) {
+            // Implement view details functionality
+            alert(`Viewing details for analysis ID: ${id}`);
+        }
+
+        function generateReport(id) {
+            // Implement report generation for specific analysis
+            alert(`Generating report for analysis ID: ${id}`);
+        }
+    </script>
+</body>
+</html>

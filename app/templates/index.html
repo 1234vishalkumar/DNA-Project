@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧬 Advanced DNA Forensic Analysis System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .nav-tabs { display: flex; background: #f1f1f1; border-radius: 10px; margin-bottom: 20px; }
+        .nav-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; border-radius: 10px; transition: all 0.3s; }
+        .nav-tab.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
+        .feature-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .confidence-indicator { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .confidence-high { background: #d4edda; color: #155724; }
+        .confidence-low { background: #f8d7da; color: #721c24; }
+        .similarity-meter { width: 100%; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+        .similarity-fill { height: 100%; background: linear-gradient(90deg, #ff4444, #ffaa00, #44ff44); transition: width 0.5s; }
+        .voice-controls { margin: 15px 0; }
+        .voice-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .batch-upload { border: 2px dashed #ccc; padding: 30px; text-align: center; border-radius: 10px; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .history-table th, .history-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .history-table th { background-color: #f2f2f2; }
+        
+        /* Gel Analysis Styles */
+        .gel-step { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .gel-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; }
+        .summary-item { background: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; }
+        .lanes-info, .band-measurements { margin: 20px 0; }
+        .comparison-details { margin: 15px 0; }
+        .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .detail-item { background: #e9ecef; padding: 15px; border-radius: 5px; text-align: center; }
+        .band-matches { margin: 20px 0; }
+        .band-matches ul { max-height: 200px; overflow-y: auto; }
+        .report-btn { background: #17a2b8; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        .report-btn:hover { background: #138496; }
+        .comparison-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .sequence-input { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧬 Advanced DNA Forensic Analysis System</h1>
+            <p class="subtitle">AI-Powered Multi-Feature DNA Analysis Platform</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('analysis')">🔬 DNA Analysis</div>
+            <div class="nav-tab" onclick="showTab('comparison')">⚖️ Comparison</div>
+            <div class="nav-tab" onclick="showTab('gel')">🧪 Gel Analysis</div>
+            <div class="nav-tab" onclick="showTab('batch')">📊 Batch Processing</div>
+            <div class="nav-tab" onclick="showTab('multimodal')">🤖 Multi-Modal</div>
+            <div class="nav-tab" onclick="showTab('dashboard')">📈 Dashboard</div>
+        </div>
+
+        <!-- DNA Analysis Tab -->
+        <div id="analysis" class="tab-content active">
+            <div class="feature-card">
+                <h2>🧠 AI-Based DNA Analysis</h2>
+                <form id="dna-analysis-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>Investigator Name:</label>
+                        <input type="text" name="investigator_name" placeholder="Enter investigator name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Sample Name:</label>
+                        <input type="text" name="sample_name" placeholder="Enter sample identifier" required>
+                    </div>
+
+                    <div class="input-section">
+                        <label><input type="radio" name="input_type" value="text" checked> Enter DNA Sequence</label>
+                        <label><input type="radio" name="input_type" value="file"> Upload DNA File (.txt/.fasta/.fa)</label>
+                    </div>
+
+                    <textarea name="dna_sequence" id="dna_sequence" placeholder="Paste DNA sequence here (ACGT format)..." rows="6" style="width: 100%; min-width: 600px;"></textarea>
+                    <input type="file" name="file" id="file" accept=".txt,.fasta,.fa" style="display:none;">
+
+                    <button type="submit">🔍 Analyze DNA Sample</button>
+                    <button type="button" onclick="clearDNAForm()" style="background: #dc3545; margin-left: 10px;">🗑️ Clear</button>
+                </form>
+
+                <div id="analysis-result" class="result-box"></div>
+                
+                <!-- Voice Controls -->
+                <div class="voice-controls" id="voice-controls" style="display:none;">
+                    <button class="voice-btn" onclick="speakResult('offline')">🔊 Speak Result (Offline)</button>
+                    <button class="voice-btn" onclick="speakResult('online')">🎵 Download Audio</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DNA Comparison Tab -->
+        <div id="comparison" class="tab-content">
+            <div class="feature-card">
+                <h2>🧬 Advanced DNA Comparison & Mutation Detection</h2>
+                <form id="comparison-form" enctype="multipart/form-data">
+                    <div class="comparison-inputs">
+                        <div class="sequence-input">
+                            <h3>Sample 1</h3>
+                            <textarea name="sequence1" placeholder="Enter first DNA sequence..." rows="4"></textarea>
+                            <input type="file" name="file1" accept=".txt,.fasta,.fa">
+                        </div>
+                        
+                        <div class="sequence-input">
+                            <h3>Sample 2</h3>
+                            <textarea name="sequence2" placeholder="Enter second DNA sequence..." rows="4"></textarea>
+                            <input type="file" name="file2" accept=".txt,.fasta,.fa">
+                        </div>
+                    </div>
+
+                    <button type="submit">⚖️ Compare DNA Sequences</button>
+                    <button type="button" onclick="clearComparisonForm()" style="background: #dc3545; margin-left: 10px;">🗑️ Clear</button>
+                </form>
+
+                <div id="comparison-result" class="result-box"></div>
+            </div>
+        </div>
+
+        <!-- Gel Electrophoresis Analysis Tab -->
+        <div id="gel" class="tab-content">
+            <div class="feature-card">
+                <h2>🧪 Gel Electrophoresis Analysis</h2>
+                
+                <!-- Step 1: Image Upload -->
+                <div class="gel-step">
+                    <h3>1️⃣ Upload Gel Image</h3>
+                    <form id="gel-upload-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label>Select gel electrophoresis image:</label>
+                            <input type="file" name="gel_image" accept=".jpg,.jpeg,.png,.bmp,.tiff" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Number of lanes (optional):</label>
+                            <input type="number" name="num_lanes" min="1" max="20" placeholder="Auto-detect if empty">
+                        </div>
+                        
+                        <button type="submit">🔍 Analyze Gel Image</button>
+                        <button type="button" onclick="clearGelForm()" style="background: #dc3545; margin-left: 10px;">🗑️ Clear</button>
+                    </form>
+                </div>
+                
+                <div id="gel-analysis-result" class="result-box"></div>
+                
+                <!-- Step 2: Lane Comparison -->
+                <div id="gel-comparison-section" class="gel-step" style="display:none;">
+                    <h3>2️⃣ Compare Lanes</h3>
+                    <form id="gel-comparison-form">
+                        <div class="form-group">
+                            <label>Lane 1 ID:</label>
+                            <select name="lane1_id" id="lane1-select" required>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Lane 2 ID:</label>
+                            <select name="lane2_id" id="lane2-select" required>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Tolerance (pixels):</label>
+                            <input type="number" name="tolerance" value="10" min="1" max="50">
+                        </div>
+                        
+                        <button type="submit">⚖️ Compare Selected Lanes</button>
+                    </form>
+                    
+                    <div id="gel-comparison-result" class="result-box"></div>
+                </div>
+                
+                <!-- Step 3: Compare Two Gel Images -->
+                <div id="gel-image-comparison-section" class="gel-step" style="display:none;">
+                    <h3>3️⃣ Compare Two Gel Images</h3>
+                    <form id="gel-image-comparison-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label>Second gel image for comparison:</label>
+                            <input type="file" name="gel_image2" accept=".jpg,.jpeg,.png,.bmp,.tiff" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Number of lanes in second image (optional):</label>
+                            <input type="number" name="num_lanes2" min="1" max="20" placeholder="Auto-detect if empty">
+                        </div>
+                        
+                        <button type="submit">🔍 Compare Gel Images</button>
+                    </form>
+                    
+                    <div id="gel-image-comparison-result" class="result-box"></div>
+                </div>
+                
+                <!-- Step 4: Generate Report -->
+                <div id="gel-report-section" class="gel-step" style="display:none;">
+                    <h3>4️⃣ Generate Report</h3>
+                    <button onclick="generateGelReport()" class="report-btn">📄 Download Analysis Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Processing Tab -->
+        <div id="batch" class="tab-content">
+            <div class="feature-card">
+                <h2>📊 Batch DNA Processing</h2>
+                <form id="batch-form" enctype="multipart/form-data">
+                    <div class="batch-upload">
+                        <p>📁 Drop multiple DNA files here or click to select</p>
+                        <input type="file" name="batch_files" multiple accept=".txt,.fasta,.fa" id="batch-files">
+                    </div>
+                    <button type="submit">🚀 Process All Files</button>
+                    <button type="button" onclick="clearBatchForm()" style="background: #dc3545; margin-left: 10px;">🗑️ Clear</button>
+                </form>
+
+                <div id="batch-result" class="result-box"></div>
+            </div>
+        </div>
+
+        <!-- Multi-Modal Analysis Tab -->
+        <div id="multimodal" class="tab-content">
+            <div class="feature-card">
+                <h2>🤖 Multi-Modal Analysis (DNA + Face)</h2>
+                <form id="multimodal-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>DNA Sequence:</label>
+                        <textarea name="dna_sequence" placeholder="Enter DNA sequence..." rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Face Image (Optional):</label>
+                        <input type="file" name="face_image" accept=".jpg,.jpeg,.png">
+                    </div>
+
+                    <button type="submit">🔬 Multi-Factor Analysis</button>
+                    <button type="button" onclick="clearMultiModalForm()" style="background: #dc3545; margin-left: 10px;">🗑️ Clear</button>
+                </form>
+
+                <div id="multimodal-result" class="result-box"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>📈 Analysis Statistics</h3>
+                    <div id="stats-display">
+                        <p>Total Analyses: <span id="total-analyses">0</span></p>
+                        <p>High Confidence: <span id="high-confidence">0</span></p>
+                        <p>Success Rate: <span id="success-rate">0%</span></p>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>📋 Recent Analysis History</h3>
+                    <button onclick="clearHistory()" class="report-btn" style="background: #dc3545; margin-bottom: 10px;">🗑️ Clear All History</button>
+                    <div id="recent-history">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Sample</th>
+                                    <th>Prediction</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <!-- History will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Button -->
+    <div style="position: fixed; bottom: 80px; right: 30px; z-index: 1000; text-align: center;">
+        <div id="ai-assistant-btn" onclick="toggleAIChat()" style="background: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%); color: white; width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 10px 35px rgba(0,153,255,0.6), 0 0 0 4px white; transition: all 0.3s ease; margin: 0 auto; border: 3px solid white;">
+            <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="35" fill="white" opacity="0.25"/>
+                <path d="M30 50 Q35 30, 50 30 Q65 30, 70 50 Q65 70, 50 70 Q35 70, 30 50" fill="white" opacity="0.3"/>
+                <circle cx="40" cy="45" r="4" fill="white"/>
+                <circle cx="60" cy="45" r="4" fill="white"/>
+                <path d="M35 60 Q50 70, 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="40" stroke="white" stroke-width="2" opacity="0.4" stroke-dasharray="5 5"/>
+            </svg>
+        </div>
+        <div style="margin-top: 10px; color: #0099ff; font-weight: 700; font-size: 16px; text-shadow: 0 2px 8px rgba(0,153,255,0.4); letter-spacing: 1px; background: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,153,255,0.3);">Genora</div>
+    </div>
+    
+    <style>
+        #ai-assistant-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(0,153,255,0.8), 0 0 0 4px white;
+        }
+        .ai-message { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    
+    <!-- AI Chat Window -->
+    <div id="ai-chat-window" style="position: fixed; bottom: 160px; right: 30px; width: 380px; height: 520px; background: white; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); display: none; flex-direction: column; z-index: 1000; border: 1px solid #e0e0e0;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 20px; border-radius: 11px 11px 0 0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" opacity="0.95"/>
+                        <circle cx="12" cy="12" r="3" fill="rgba(102,126,234,0.8)"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">Genora</h3>
+                    <p style="margin: 0; font-size: 11px; opacity: 0.9; font-weight: 300;">AI-Powered Genomic Assistant</p>
+                </div>
+            </div>
+            <button onclick="toggleAIChat()" style="background: rgba(255,255,255,0.15); border: none; color: white; font-size: 22px; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">&times;</button>
+        </div>
+        <div style="padding: 12px 15px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+            <button onclick="readScreen()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; box-shadow: 0 3px 10px rgba(102,126,234,0.3); font-weight: 500; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102,126,234,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 10px rgba(102,126,234,0.3)'">
+                🔍 Analyze Current Results
+            </button>
+        </div>
+        <div id="ai-chat-messages" style="flex: 1; overflow-y: auto; padding: 15px; background: #ffffff;"></div>
+        <div style="padding: 15px; border-top: 1px solid #e0e0e0; background: #f8f9fa; border-radius: 0 0 11px 11px;">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="ai-chat-input" placeholder="Ask Genora anything..." style="flex: 1; padding: 12px 16px; border: 1px solid #d0d0d0; border-radius: 25px; font-size: 14px; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#d0d0d0'" onkeypress="if(event.key==='Enter') sendAIMessage()">
+                <button onclick="sendAIMessage()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-size: 16px; box-shadow: 0 3px 10px rgba(102,126,234,0.3); transition: all 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">➤</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2025 DNA Forensic Analysis System</p>
+    </footer>
+
+    <script>
+        let currentAnalysisResult = null;
+
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Load dashboard data if dashboard tab is selected
+            if (tabName === 'dashboard') {
+                loadDashboardData();
+            }
+        }
+
+        // Input type switching
+        document.querySelectorAll('input[name="input_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const fileInput = document.getElementById('file');
+                const textArea = document.getElementById('dna_sequence');
+                
+                if (this.value === 'file') {
+                    fileInput.style.display = 'block';
+                    textArea.style.display = 'none';
+                } else {
+                    fileInput.style.display = 'none';
+                    textArea.style.display = 'block';
+                }
+            });
+        });
+
+        // DNA Analysis Form
+        document.getElementById('dna-analysis-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultBox = document.getElementById('analysis-result');
+            resultBox.innerHTML = '<p>⏳ Analyzing DNA sample... Please wait.</p>';
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    resultBox.innerHTML = `<p class='error'>❌ ${data.error}</p>`;
+                    return;
+                }
+
+                currentAnalysisResult = data;
+                displayAnalysisResult(data);
+                document.getElementById('voice-controls').style.display = 'block';
+
+            } catch (error) {
+                resultBox.innerHTML = `<p class='error'>❌ Error: ${error.message}</p>`;
+            }
+        });
+
+        // DNA Comparison Form
+        document.getElementById('comparison-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultBox = document.getElementById('comparison-result');
+            resultBox.innerHTML = '<p>⏳ Comparing DNA sequences... Please wait.</p>';
+
+            try {
+                const response = await fetch('/compare', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    resultBox.innerHTML = `<p class='error'>❌ ${data.error}</p>`;
+                    return;
+                }
+
+                displayComparisonResult(data);
+
+            } catch (error) {
+                resultBox.innerHTML = `<p class='error'>❌ Error: ${error.message}</p>`;
+            }
+        });
+
+        // Batch Processing Form
+        document.getElementById('batch-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultBox = document.getElementById('batch-result');
+            resultBox.innerHTML = '<p>⏳ Processing batch files... Please wait.</p>';
+
+            try {
+                const response = await fetch('/batch_process', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    resultBox.innerHTML = `<p class='error'>❌ ${data.error}</p>`;
+                    return;
+                }
+
+                displayBatchResult(data);
+
+            } catch (error) {
+                resultBox.innerHTML = `<p class='error'>❌ Error: ${error.message}</p>`;
+            }
+        });
+
+        // Multi-Modal Analysis Form
+        document.getElementById('multimodal-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultBox = document.getElementById('multimodal-result');
+            resultBox.innerHTML = '<p>⏳ Performing multi-modal analysis... Please wait.</p>';
+
+            try {
+                const response = await fetch('/multi_factor_analysis', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    resultBox.innerHTML = `<p class='error'>❌ ${data.error}</p>`;
+                    return;
+                }
+
+                displayMultiModalResult(data);
+
+            } catch (error) {
+                resultBox.innerHTML = `<p class='error'>❌ Error: ${error.message}</p>`;
+            }
+        });
+
+        // Display Functions
+        function displayAnalysisResult(data) {
+            const confidenceClass = data.confidence > 0.7 ? 'confidence-high' : 'confidence-low';
+            
+            let html = `
+                <h2>🧠 DNA Analysis Results</h2>
+                <div class="confidence-indicator ${confidenceClass}">
+                    <strong>Prediction:</strong> ${data.prediction}<br>
+                    <strong>Confidence:</strong> ${(data.confidence * 100).toFixed(2)}%<br>
+                    <strong>Status:</strong> ${data.confidence_assessment.status}
+                </div>
+            `;
+            
+            // Add DNA characteristics if available
+            if (data.dna_characteristics) {
+                const dc = data.dna_characteristics;
+                html += `
+                    <div class="confidence-indicator" style="margin-top: 15px; background: #e3f2fd;">
+                        <h3>🧬 DNA Characteristics</h3>
+                        <strong>DNA Type:</strong> ${dc.dna_type}<br>
+                        <strong>Sequence Length:</strong> ${dc.length} base pairs<br>
+                        <strong>GC Content:</strong> ${dc.gc_content}%<br>
+                        <strong>Quality:</strong> ${dc.quality}<br>
+                        <strong>Base Composition:</strong><br>
+                        &nbsp;&nbsp;A: ${dc.composition.A.toFixed(1)}% | 
+                        T: ${dc.composition.T.toFixed(1)}% | 
+                        G: ${dc.composition.G.toFixed(1)}% | 
+                        C: ${dc.composition.C.toFixed(1)}%
+                    </div>
+                `;
+            }
+            
+            // Add blood group information if available
+            if (data.blood_group) {
+                const bg = data.blood_group;
+                html += `
+                    <div class="confidence-indicator confidence-high" style="margin-top: 15px;">
+                        <h3>🩸 Blood Group Analysis</h3>
+                        <strong>Blood Group:</strong> ${bg.blood_group}<br>
+                        <strong>ABO Type:</strong> ${bg.abo_type}<br>
+                        <strong>Rh Factor:</strong> ${bg.rh_factor}<br>
+                        <strong>Detection Confidence:</strong> ${(bg.confidence * 100).toFixed(1)}%<br>
+                        <strong>Frequency:</strong> ${bg.interpretation.frequency}<br>
+                        <strong>Description:</strong> ${bg.interpretation.description}<br>
+                        <strong>Can Donate To:</strong> ${bg.interpretation.can_donate_to.join(', ')}<br>
+                        <strong>Can Receive From:</strong> ${bg.interpretation.can_receive_from.join(', ')}
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> ${data.confidence_assessment.recommendation}
+                </div>
+                
+                <div class="charts-container">
+                    ${data.kmer_chart}
+                    ${data.confidence_chart}
+                </div>
+                
+                <button onclick="generateReport()" class="report-btn">📄 Generate PDF Report</button>
+            `;
+            
+            document.getElementById('analysis-result').innerHTML = html;
+        }
+
+        function displayComparisonResult(data) {
+            let html = `
+                <h2>⚖️ DNA Comparison Results</h2>
+                
+                <div class="similarity-results">
+                    <h3>Similarity Metrics</h3>
+                    <div class="similarity-item">
+                        <label>Combined Similarity: ${data.combined_similarity}%</label>
+                        <div class="similarity-meter">
+                            <div class="similarity-fill" style="width: ${data.combined_similarity}%"></div>
+                        </div>
+                    </div>
+                    
+                    <p><strong>Match Quality:</strong> ${data.match_quality}</p>
+                    <p><strong>Cosine Similarity:</strong> ${data.cosine_similarity}%</p>
+                    <p><strong>Sequence Similarity:</strong> ${data.sequence_similarity}%</p>
+                    <p><strong>Levenshtein Similarity:</strong> ${data.levenshtein_similarity}%</p>
+                </div>
+                
+                <div class="mutation-info">
+                    <h3>🧬 Mutation Analysis</h3>
+                    <p><strong>Total Mutations:</strong> ${data.mutation_count}</p>
+                    ${data.mutations.length > 0 ? `
+                        <details>
+                            <summary>View Mutations (First 20)</summary>
+                            <ul>
+                                ${data.mutations.map(m => `<li>Position ${m[0]}: ${m[1]} → ${m[2]}</li>`).join('')}
+                            </ul>
+                        </details>
+                    ` : '<p>No mutations detected in the analyzed region.</p>'}
+                </div>
+                
+                <div class="charts-container">
+                    ${data.similarity_chart}
+                </div>
+            `;
+            
+            document.getElementById('comparison-result').innerHTML = html;
+        }
+
+        function displayBatchResult(data) {
+            let html = `
+                <h2>📊 Batch Processing Results</h2>
+                <p><strong>Total Files Processed:</strong> ${data.total_processed}</p>
+                
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.results.forEach(result => {
+                if (result.success) {
+                    html += `
+                        <tr>
+                            <td>${result.filename}</td>
+                            <td>${result.prediction}</td>
+                            <td>${(result.confidence * 100).toFixed(2)}%</td>
+                            <td>${result.status}</td>
+                        </tr>
+                    `;
+                } else {
+                    html += `
+                        <tr>
+                            <td>${result.filename}</td>
+                            <td colspan="3" class="error">❌ ${result.error}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('batch-result').innerHTML = html;
+        }
+
+        function displayMultiModalResult(data) {
+            let html = `
+                <h2>🤖 Multi-Modal Analysis Results</h2>
+                
+                <div class="combined-analysis">
+                    <div class="confidence-indicator ${data.combined_confidence > 0.8 ? 'confidence-high' : 'confidence-low'}">
+                        <strong>Combined Confidence:</strong> ${(data.combined_confidence * 100).toFixed(2)}%<br>
+                        <strong>Verification Status:</strong> ${data.verification_status}
+                    </div>
+                    
+                    <div class="dna-results">
+                        <h3>🧬 DNA Analysis</h3>
+                        <p><strong>Prediction:</strong> ${data.dna_analysis.prediction}</p>
+                        <p><strong>Confidence:</strong> ${(data.dna_analysis.confidence * 100).toFixed(2)}%</p>
+                    </div>
+                    
+                    <div class="face-results">
+                        <h3>👤 Facial Analysis</h3>
+                        <p><strong>Face Detected:</strong> ${data.face_analysis.face_detected ? '✅ Yes' : '❌ No'}</p>
+                        ${data.face_analysis.face_count ? `<p><strong>Faces Found:</strong> ${data.face_analysis.face_count}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('multimodal-result').innerHTML = html;
+        }
+
+        // Voice synthesis functions
+        async function speakResult(type) {
+            if (!currentAnalysisResult) return;
+            
+            const text = `DNA analysis complete. Prediction: ${currentAnalysisResult.prediction}. Confidence: ${(currentAnalysisResult.confidence * 100).toFixed(0)} percent. Status: ${currentAnalysisResult.confidence_assessment.status}.`;
+            
+            try {
+                const response = await fetch('/voice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, type: type })
+                });
+                
+                if (type === 'online') {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'dna_analysis_result.mp3';
+                    a.click();
+                }
+            } catch (error) {
+                console.error('Voice synthesis error:', error);
+            }
+        }
+
+        // Generate PDF report
+        async function generateReport() {
+            if (!currentAnalysisResult) return;
+            
+            try {
+                const response = await fetch('/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentAnalysisResult)
+                });
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'forensic_report.pdf';
+                a.click();
+            } catch (error) {
+                console.error('Report generation error:', error);
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/history');
+                const history = await response.json();
+                
+                // Update statistics
+                const totalAnalyses = history.length;
+                const highConfidence = history.filter(h => h.confidence > 0.8).length;
+                const successRate = totalAnalyses > 0 ? (highConfidence / totalAnalyses * 100).toFixed(1) : 0;
+                
+                document.getElementById('total-analyses').textContent = totalAnalyses;
+                document.getElementById('high-confidence').textContent = highConfidence;
+                document.getElementById('success-rate').textContent = successRate + '%';
+                
+                // Update history table
+                const tbody = document.getElementById('history-tbody');
+                tbody.innerHTML = '';
+                
+                history.slice(0, 10).forEach(item => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${new Date(item.timestamp).toLocaleString()}</td>
+                        <td>${item.sample_name}</td>
+                        <td>${item.prediction}</td>
+                        <td>${(item.confidence * 100).toFixed(1)}%</td>
+                    `;
+                });
+                
+            } catch (error) {
+                console.error('Dashboard loading error:', error);
+            }
+        }
+
+        // Gel Analysis Variables
+        let currentGelData = null;
+        
+        // Gel Upload Form
+        document.getElementById('gel-upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultBox = document.getElementById('gel-analysis-result');
+            resultBox.innerHTML = '<p>⏳ Analyzing gel image... Please wait.</p>';
+
+            try {
+                const response = await fetch('/gel_upload', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    resultBox.innerHTML = `<p class='error'>❌ ${data.error}</p>`;
+                    return;
+                }
+
+                currentGelData = data;
+                displayGelAnalysisResult(data);
+                populateLaneSelectors(data.lanes);
+                document.getElementById('gel-comparison-section').style.display = 'block';
+                document.getElementById('gel-image-comparison-section').style.display = 'block';
+                document.getElementById('gel-report-section').style.display = 'block';
+
+            } catch (error) {
+                resultBox.innerHTML = `<p class='error'>❌ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Gel Comparison Form
+        document.getElementById('gel-comparison-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentGelData) {
+                alert('Please upload and analyze a gel image first.');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const requestData = {
+                image_path: currentGelData.image_path,
+                lane1_id: parseInt(formData.get('lane1_id')),
+                lane2_id: parseInt(formData.get('lane2_id')),
+                tolerance: parseInt(formData.get('tolerance'))
+            };
+            
+            const resultBox = document.getElementById('gel-comparison-result');
+            resultBox.innerHTML = '<p>⏳ Comparing lanes... Please wait.</p>';
+
+            try {
+                const response = await fetch('/gel_compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    resultBox.innerHTML = `<p class='error'>❌ ${data.error}</p>`;
+                    return;
+                }
+
+                displayGelComparisonResult(data);
+
+            } catch (error) {
+                resultBox.innerHTML = `<p class='error'>❌ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Helper functions for gel interpretation
+        function getGelInterpretation(data) {
+            const avgBandsPerLane = data.total_bands / data.lanes_detected;
+            if (avgBandsPerLane > 5) {
+                return 'High band density detected, indicating complex DNA fragments or multiple samples. This suggests good DNA quality and successful separation.';
+            } else if (avgBandsPerLane > 2) {
+                return 'Moderate band density observed, showing clear DNA fragment separation. Results indicate successful electrophoresis with distinct bands.';
+            } else if (avgBandsPerLane > 0) {
+                return 'Low band density detected. This may indicate limited DNA fragments, degraded samples, or specific targeted analysis.';
+            } else {
+                return 'No bands detected. This may require re-running the gel with adjusted parameters or checking sample quality.';
+            }
+        }
+        
+        function getGelQuality(data) {
+            if (data.total_bands === 0) {
+                return 'Poor - No bands detected';
+            } else if (data.total_bands < data.lanes_detected * 2) {
+                return 'Fair - Limited band detection';
+            } else if (data.total_bands < data.lanes_detected * 5) {
+                return 'Good - Clear band separation';
+            } else {
+                return 'Excellent - High-quality results with multiple distinct bands';
+            }
+        }
+        
+        function getGelRecommendation(data) {
+            if (data.total_bands === 0) {
+                return 'Consider re-running the gel with higher DNA concentration or longer run time. Check sample quality and loading technique.';
+            } else if (data.total_bands < data.lanes_detected * 2) {
+                return 'Results are acceptable but may benefit from optimization. Consider adjusting voltage, run time, or gel concentration for better resolution.';
+            } else {
+                return 'Results are suitable for analysis. Proceed with lane comparison or molecular weight estimation if ladder lane is available.';
+            }
+        }
+        
+        // Display gel analysis results
+        function displayGelAnalysisResult(data) {
+            let html = `
+                <h2>🧪 Gel Analysis Results</h2>
+                
+                <div class="gel-summary">
+                    <div class="summary-item">
+                        <strong>Lanes Detected:</strong> ${data.lanes_detected}
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Bands:</strong> ${data.total_bands}
+                    </div>
+                </div>
+                
+                <div class="lanes-info">
+                    <h3>📏 Lane Information</h3>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Lane ID</th>
+                                <th>Width (px)</th>
+                                <th>Bands Detected</th>
+                                <th>Band Positions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.lanes.forEach(lane => {
+                const laneBands = data.bands[lane.id] || [];
+                const bandPositions = laneBands.map(b => b.position).join(', ');
+                
+                html += `
+                    <tr>
+                        <td>Lane ${lane.id}</td>
+                        <td>${lane.width}</td>
+                        <td>${laneBands.length}</td>
+                        <td>${bandPositions || 'None'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="band-measurements">
+                    <h3>📏 Band Measurements</h3>
+                    <details>
+                        <summary>View Detailed Measurements</summary>
+                        <pre>${JSON.stringify(data.measurements, null, 2)}</pre>
+                    </details>
+                </div>
+                
+                <div class="confidence-indicator" style="margin-top: 20px; background: #e8f5e9;">
+                    <h3>📝 Conclusion</h3>
+                    <p><strong>Analysis Summary:</strong></p>
+                    <p>The gel electrophoresis analysis successfully identified <strong>${data.lanes_detected} lanes</strong> with a total of <strong>${data.total_bands} bands</strong> detected across all lanes.</p>
+                    <p><strong>Interpretation:</strong> ${getGelInterpretation(data)}</p>
+                    <p><strong>Quality Assessment:</strong> ${getGelQuality(data)}</p>
+                    <p><strong>Recommendation:</strong> ${getGelRecommendation(data)}</p>
+                </div>
+            `;
+            
+            document.getElementById('gel-analysis-result').innerHTML = html;
+        }
+        
+        // Helper functions for lane comparison
+        function getLaneComparisonInterpretation(similarity) {
+            if (similarity > 90) {
+                return 'Lanes are highly similar, indicating identical or nearly identical DNA samples. This suggests the samples are from the same source or closely related.';
+            } else if (similarity > 70) {
+                return 'Lanes show good similarity with some variations. Samples may be related or from similar sources with minor differences.';
+            } else if (similarity > 50) {
+                return 'Lanes show moderate similarity. Samples have some common bands but also significant differences, suggesting partial match or related samples.';
+            } else {
+                return 'Lanes show low similarity. Samples are likely from different sources or have undergone different treatments/conditions.';
+            }
+        }
+        
+        function getLaneComparisonRecommendation(data) {
+            if (data.similarity_score > 80) {
+                return 'High similarity confirmed. Results can be used for sample identification or verification purposes.';
+            } else if (data.similarity_score > 50) {
+                return 'Moderate similarity detected. Consider additional analysis or comparison with reference samples for conclusive results.';
+            } else {
+                return 'Low similarity indicates different samples. Verify sample loading and consider re-running if unexpected results.';
+            }
+        }
+        
+        // Display gel comparison results
+        function displayGelComparisonResult(data) {
+            let html = `
+                <h2>⚖️ Lane Comparison Results</h2>
+                
+                <div class="similarity-results">
+                    <div class="similarity-item">
+                        <label>Similarity Score: ${data.similarity_score}%</label>
+                        <div class="similarity-meter">
+                            <div class="similarity-fill" style="width: ${data.similarity_score}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-details">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <h4>🟢 Lane ${data.lane1_id}</h4>
+                            <p>Total Bands: ${data.total_bands_lane1}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>🟢 Lane ${data.lane2_id}</h4>
+                            <p>Total Bands: ${data.total_bands_lane2}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>✅ Matched Bands</h4>
+                            <p>${data.matched_bands}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="band-matches">
+                    <h3>🎯 Band Matching Details</h3>
+                    
+                    ${data.matches.length > 0 ? `
+                        <h4>✅ Matching Bands (${data.matches.length})</h4>
+                        <ul>
+                            ${data.matches.map(match => `
+                                <li>Band ${match.band1.id} (pos: ${match.band1.position}) ↔ Band ${match.band2.id} (pos: ${match.band2.position}) - Distance: ${match.distance}px</li>
+                            `).join('')}
+                        </ul>
+                    ` : '<p>No matching bands found.</p>'}
+                    
+                    ${data.unique_lane1.length > 0 ? `
+                        <h4>🔴 Unique to Lane ${data.lane1_id} (${data.unique_lane1.length})</h4>
+                        <ul>
+                            ${data.unique_lane1.map(band => `<li>Band ${band.id} at position ${band.position}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                    
+                    ${data.unique_lane2.length > 0 ? `
+                        <h4>🔴 Unique to Lane ${data.lane2_id} (${data.unique_lane2.length})</h4>
+                        <ul>
+                            ${data.unique_lane2.map(band => `<li>Band ${band.id} at position ${band.position}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+                
+                <div class="confidence-indicator" style="margin-top: 20px; background: #fff3cd;">
+                    <h3>📝 Comparison Conclusion</h3>
+                    <p><strong>Similarity Score:</strong> ${data.similarity_score}%</p>
+                    <p><strong>Interpretation:</strong> ${getLaneComparisonInterpretation(data.similarity_score)}</p>
+                    <p><strong>Match Status:</strong> ${data.similarity_score > 80 ? '✅ High Match - Lanes show strong similarity' : data.similarity_score > 50 ? '🟡 Moderate Match - Lanes show partial similarity' : '❌ Low Match - Lanes show significant differences'}</p>
+                    <p><strong>Recommendation:</strong> ${getLaneComparisonRecommendation(data)}</p>
+                </div>
+            `;
+            
+            document.getElementById('gel-comparison-result').innerHTML = html;
+        }
+        
+        // Populate lane selector dropdowns
+        function populateLaneSelectors(lanes) {
+            const lane1Select = document.getElementById('lane1-select');
+            const lane2Select = document.getElementById('lane2-select');
+            
+            // Clear existing options
+            lane1Select.innerHTML = '';
+            lane2Select.innerHTML = '';
+            
+            // Add lane options
+            lanes.forEach(lane => {
+                const option1 = new Option(`Lane ${lane.id}`, lane.id);
+                const option2 = new Option(`Lane ${lane.id}`, lane.id);
+                lane1Select.add(option1);
+                lane2Select.add(option2);
+            });
+            
+            // Set default selections
+            if (lanes.length >= 2) {
+                lane1Select.value = lanes[0].id;
+                lane2Select.value = lanes[1].id;
+            }
+        }
+        
+        // Gel Image Comparison Form
+        document.getElementById('gel-image-comparison-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentGelData) {
+                alert('Please upload and analyze the first gel image first.');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            formData.append('first_image_path', currentGelData.image_path);
+            
+            const resultBox = document.getElementById('gel-image-comparison-result');
+            resultBox.innerHTML = '<p>⏳ Comparing gel images... Please wait.</p>';
+
+            try {
+                const response = await fetch('/gel_image_compare', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    resultBox.innerHTML = `<p class='error'>❌ ${data.error}</p>`;
+                    return;
+                }
+
+                displayGelImageComparisonResult(data);
+
+            } catch (error) {
+                resultBox.innerHTML = `<p class='error'>❌ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Helper functions for image comparison
+        function getImageComparisonInterpretation(data) {
+            if (data.overall_similarity > 80) {
+                return `The two gel images show high similarity (${data.overall_similarity}%), indicating that the samples in both gels are highly comparable. This suggests consistent experimental conditions and similar DNA samples.`;
+            } else if (data.overall_similarity > 60) {
+                return `The gel images show good similarity (${data.overall_similarity}%), with most lanes matching well. Minor variations may be due to experimental conditions or sample differences.`;
+            } else if (data.overall_similarity > 40) {
+                return `The gel images show moderate similarity (${data.overall_similarity}%). Significant differences exist between some lanes, suggesting different samples or varying experimental conditions.`;
+            } else {
+                return `The gel images show low similarity (${data.overall_similarity}%). The samples appear to be significantly different, or experimental conditions varied considerably between runs.`;
+            }
+        }
+        
+        function getImageComparisonRecommendation(data) {
+            if (data.overall_similarity > 80) {
+                return 'High similarity confirms reproducibility. Results are reliable for comparative analysis and publication.';
+            } else if (data.overall_similarity > 60) {
+                return 'Good similarity indicates acceptable reproducibility. Results can be used with appropriate documentation of variations.';
+            } else {
+                return 'Low similarity suggests reviewing experimental protocols. Consider standardizing conditions for better reproducibility.';
+            }
+        }
+        
+        // Display gel image comparison results
+        function displayGelImageComparisonResult(data) {
+            let html = `
+                <h2>🔍 Gel Image Comparison Results</h2>
+                
+                <div class="gel-summary">
+                    <div class="summary-item">
+                        <strong>Image 1 Lanes:</strong> ${data.image1_lanes}
+                    </div>
+                    <div class="summary-item">
+                        <strong>Image 2 Lanes:</strong> ${data.image2_lanes}
+                    </div>
+                    <div class="summary-item">
+                        <strong>Overall Similarity:</strong> ${data.overall_similarity}%
+                    </div>
+                </div>
+                
+                <div class="comparison-details">
+                    <h3>📋 Detailed Comparison</h3>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Lane Pair</th>
+                                <th>Similarity %</th>
+                                <th>Matching Bands</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.lane_comparisons.forEach(comp => {
+                html += `
+                    <tr>
+                        <td>Lane ${comp.lane1} vs Lane ${comp.lane2}</td>
+                        <td>${comp.similarity}%</td>
+                        <td>${comp.matching_bands}</td>
+                        <td>${comp.similarity > 80 ? '✅ High Match' : comp.similarity > 50 ? '🟡 Moderate' : '❌ Low Match'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="confidence-indicator" style="margin-top: 20px; background: #e1f5fe;">
+                    <h3>📝 Image Comparison Conclusion</h3>
+                    <p><strong>Overall Similarity:</strong> ${data.overall_similarity}%</p>
+                    <p><strong>Interpretation:</strong> ${getImageComparisonInterpretation(data)}</p>
+                    <p><strong>Match Quality:</strong> ${data.overall_similarity > 80 ? '✅ Excellent Match' : data.overall_similarity > 60 ? '🟡 Good Match' : data.overall_similarity > 40 ? '🟠 Fair Match' : '❌ Poor Match'}</p>
+                    <p><strong>Recommendation:</strong> ${getImageComparisonRecommendation(data)}</p>
+                </div>
+            `;
+            
+            document.getElementById('gel-image-comparison-result').innerHTML = html;
+        }
+        
+        // Generate gel analysis report
+        async function generateGelReport() {
+            if (!currentGelData) {
+                alert('Please upload and analyze a gel image first.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/gel_report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_path: currentGelData.image_path
+                    })
+                });
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'gel_analysis_report.json';
+                a.click();
+            } catch (error) {
+                console.error('Gel report generation error:', error);
+                alert('Error generating report: ' + error.message);
+            }
+        }
+
+        // Clear form functions
+        function clearDNAForm() {
+            document.getElementById('dna-analysis-form').reset();
+            document.getElementById('analysis-result').innerHTML = '';
+            document.getElementById('voice-controls').style.display = 'none';
+            currentAnalysisResult = null;
+        }
+        
+        function clearComparisonForm() {
+            document.getElementById('comparison-form').reset();
+            document.getElementById('comparison-result').innerHTML = '';
+        }
+        
+        function clearBatchForm() {
+            document.getElementById('batch-form').reset();
+            document.getElementById('batch-result').innerHTML = '';
+        }
+        
+        function clearMultiModalForm() {
+            document.getElementById('multimodal-form').reset();
+            document.getElementById('multimodal-result').innerHTML = '';
+        }
+        
+        function clearGelForm() {
+            document.getElementById('gel-upload-form').reset();
+            document.getElementById('gel-analysis-result').innerHTML = '';
+            document.getElementById('gel-comparison-section').style.display = 'none';
+            document.getElementById('gel-image-comparison-section').style.display = 'none';
+            document.getElementById('gel-report-section').style.display = 'none';
+            currentGelData = null;
+        }
+        
+        // Clear history function
+        async function clearHistory() {
+            if (!confirm('Are you sure you want to delete all analysis history? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/clear_history', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('History cleared successfully!');
+                    loadDashboardData(); // Reload dashboard
+                } else {
+                    alert('Error clearing history: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error clearing history: ' + error.message);
+            }
+        }
+        
+        // AI Assistant Functions
+        function toggleAIChat() {
+            const chatWindow = document.getElementById('ai-chat-window');
+            if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
+                chatWindow.style.display = 'flex';
+                if (document.getElementById('ai-chat-messages').children.length === 0) {
+                    addAIMessage('Hello, I\'m Genora 🧬\n\nYour AI-powered genomic analysis assistant. I specialize in:\n\n• DNA sequence interpretation\n• Gel electrophoresis analysis\n• Blood group genetics\n• Confidence score evaluation\n• Result recommendations\n\nClick "Analyze Current Results" or ask me anything about your DNA analysis.', 'ai');
+                }
+            } else {
+                chatWindow.style.display = 'none';
+            }
+        }
+        
+        function addAIMessage(message, sender) {
+            const messagesDiv = document.getElementById('ai-chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'ai-message';
+            messageDiv.style.cssText = `margin-bottom: 12px; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; ${sender === 'user' ? 'background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; margin-left: 40px; text-align: right; border-bottom-right-radius: 4px; box-shadow: 0 2px 8px rgba(30,60,114,0.2);' : 'background: #f8f9fa; margin-right: 40px; border-bottom-left-radius: 4px; border: 1px solid #e0e0e0; color: #333;'}`;
+            messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function readScreen() {
+            // Collect visible results from the page
+            let screenContent = '';
+            
+            // Check DNA Analysis results
+            const dnaResult = document.getElementById('analysis-result');
+            if (dnaResult && dnaResult.innerHTML.trim()) {
+                screenContent += 'DNA Analysis Results Found. ';
+                if (currentAnalysisResult) {
+                    screenContent += `Prediction: ${currentAnalysisResult.prediction}. Confidence: ${(currentAnalysisResult.confidence * 100).toFixed(1)}%. `;
+                    if (currentAnalysisResult.blood_group) {
+                        screenContent += `Blood Group: ${currentAnalysisResult.blood_group.blood_group}. `;
+                    }
+                }
+            }
+            
+            // Check Gel Analysis results
+            const gelResult = document.getElementById('gel-analysis-result');
+            if (gelResult && gelResult.innerHTML.trim()) {
+                screenContent += 'Gel Electrophoresis Results Found. ';
+                if (currentGelData) {
+                    screenContent += `Detected ${currentGelData.lanes_detected} lanes with ${currentGelData.total_bands} total bands. `;
+                }
+            }
+            
+            // Check Comparison results
+            const compResult = document.getElementById('comparison-result');
+            if (compResult && compResult.innerHTML.trim()) {
+                screenContent += 'DNA Comparison Results Found. ';
+            }
+            
+            if (!screenContent) {
+                addAIMessage('No analysis results detected on the current screen.\n\nTo get started:\n• Navigate to DNA Analysis tab to analyze sequences\n• Use Gel Analysis for electrophoresis images\n• Try Comparison for sequence matching\n\nOnce you have results, I can provide detailed insights.', 'ai');
+                return;
+            }
+            
+            // Send to AI for analysis
+            addAIMessage('Let me analyze what\'s on your screen... 🔍', 'user');
+            
+            fetch('/ai_chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: 'read screen: ' + screenContent })
+            })
+            .then(response => response.json())
+            .then(data => {
+                addAIMessage(data.response || 'Analysis complete!', 'ai');
+            })
+            .catch(error => {
+                addAIMessage('Oops! Had trouble reading the screen. 😅', 'ai');
+            });
+        }
+        
+        async function sendAIMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addAIMessage(message, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            addAIMessage('Thinking...', 'ai');
+            
+            try {
+                const response = await fetch('/ai_chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                const messagesDiv = document.getElementById('ai-chat-messages');
+                messagesDiv.removeChild(messagesDiv.lastChild);
+                
+                addAIMessage(data.response || 'Sorry, I couldn\'t process that.', 'ai');
+            } catch (error) {
+                const messagesDiv = document.getElementById('ai-chat-messages');
+                messagesDiv.removeChild(messagesDiv.lastChild);
+                addAIMessage('Sorry, there was an error processing your request.', 'ai');
+            }
+        }
+        
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+    </script>
+</body>
+</html>

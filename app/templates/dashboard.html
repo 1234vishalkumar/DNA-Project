@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 DNA Analysis Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 DNA Analysis Dashboard</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">🏠 Home</a>
+                <a href="{{ url_for('analysis_history') }}">📋 History</a>
+            </nav>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Analyses</h3>
+                <div class="stat-number">{{ stats.total_analyses }}</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>High Confidence Results</h3>
+                <div class="stat-number">{{ stats.high_confidence_analyses }}</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Success Rate</h3>
+                <div class="stat-number">{{ "%.1f"|format(stats.confidence_rate) }}%</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <canvas id="analysisChart"></canvas>
+            </div>
+        </div>
+
+        <div class="recent-analyses">
+            <h2>Recent Analyses</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Investigator</th>
+                        <th>Sample</th>
+                        <th>Prediction</th>
+                        <th>Confidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for analysis in recent_history %}
+                    <tr>
+                        <td>{{ analysis[1] }}</td>
+                        <td>{{ analysis[2] }}</td>
+                        <td>{{ analysis[3] }}</td>
+                        <td>{{ analysis[5] }}</td>
+                        <td>{{ "%.1f"|format(analysis[6] * 100) if analysis[6] else 'N/A' }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Create analysis chart
+        const ctx = document.getElementById('analysisChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['High Confidence', 'Low Confidence'],
+                datasets: [{
+                    data: [{{ stats.high_confidence_analyses }}, {{ stats.total_analyses - stats.high_confidence_analyses }}],
+                    backgroundColor: ['#28a745', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Analysis Confidence Distribution'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
