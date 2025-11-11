@@ -263,13 +263,19 @@ docker run -p 5000:5000 dna-forensics
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 👩💻 Author
+## 👩💻 Authors
 
 **Venika**
 - 🧬 DNA Forensics Specialist
 - 🤖 AI/ML Engineer
 - 📧 Contact: 
 - 🌐 Portfolio: [Your Website]
+
+**Vishal Kumar**
+- 💻 Full Stack Developer & System Architect
+- 🤖 AI/ML Engineer
+- 📧 GitHub: [@1234vishalkumar](https://github.com/1234vishalkumar)
+- 🌐 Project: [DNA-Project](https://github.com/1234vishalkumar/DNA-Project)
 
 ## 🙏 Acknowledgments
 
