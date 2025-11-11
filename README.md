@@ -265,18 +265,16 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👩💻 Authors
 
-**Venika**
-- 🧬 DNA Forensics Specialist
-- 🤖 AI/ML Engineer
-- 📧 Contact: 
-- 🌐 Portfolio: [Your Website]
-
 **Vishal Kumar**
-- 💻 Full Stack Developer & System Architect
-- 🤖 AI/ML Engineer
-- 📧 GitHub: [@1234vishalkumar](https://github.com/1234vishalkumar)
-- 🌐 Project: [DNA-Project](https://github.com/1234vishalkumar/DNA-Project)
+-  Full Stack Developer & System Architect
+-  AI/ML Engineer
+-  contact:vk3785940@gmail.com
 
+**Venika**
+- Full Stack Developer & System Architect
+-  AI/ML Engineer
+-  Contact:
+-  
 ## 🙏 Acknowledgments
 
 - **BioPython**: DNA sequence processing
