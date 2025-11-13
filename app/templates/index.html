@@ -582,9 +582,15 @@
                 <div class="charts-container">
                     ${data.similarity_chart}
                 </div>
+                
+                <div class="voice-controls">
+                    <button class="voice-btn" onclick="speakComparisonResult('offline')">🔊 Speak Result (Offline)</button>
+                    <button class="voice-btn" onclick="speakComparisonResult('online')">🎵 Download Audio</button>
+                </div>
             `;
             
             document.getElementById('comparison-result').innerHTML = html;
+            window.currentComparisonResult = data;
         }
 
         function displayBatchResult(data) {
@@ -624,8 +630,13 @@
                 }
             });
             
-            html += '</tbody></table>';
+            html += `</tbody></table>
+                <div class="voice-controls">
+                    <button class="voice-btn" onclick="speakBatchResult('offline')">🔊 Speak Result (Offline)</button>
+                    <button class="voice-btn" onclick="speakBatchResult('online')">🎵 Download Audio</button>
+                </div>`;
             document.getElementById('batch-result').innerHTML = html;
+            window.currentBatchResult = data;
         }
 
         function displayMultiModalResult(data) {
@@ -650,9 +661,15 @@
                         ${data.face_analysis.face_count ? `<p><strong>Faces Found:</strong> ${data.face_analysis.face_count}</p>` : ''}
                     </div>
                 </div>
+                
+                <div class="voice-controls">
+                    <button class="voice-btn" onclick="speakMultiModalResult('offline')">🔊 Speak Result (Offline)</button>
+                    <button class="voice-btn" onclick="speakMultiModalResult('online')">🎵 Download Audio</button>
+                </div>
             `;
             
             document.getElementById('multimodal-result').innerHTML = html;
+            window.currentMultiModalResult = data;
         }
 
         // Voice synthesis functions
@@ -674,6 +691,49 @@
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = 'dna_analysis_result.mp3';
+                    a.click();
+                }
+            } catch (error) {
+                console.error('Voice synthesis error:', error);
+            }
+        }
+        
+        async function speakComparisonResult(type) {
+            if (!window.currentComparisonResult) return;
+            const data = window.currentComparisonResult;
+            const text = `DNA comparison complete. Combined similarity: ${data.combined_similarity} percent. Match quality: ${data.match_quality}. Total mutations detected: ${data.mutation_count}.`;
+            await synthesizeVoice(text, type, 'comparison_result.mp3');
+        }
+        
+        async function speakBatchResult(type) {
+            if (!window.currentBatchResult) return;
+            const data = window.currentBatchResult;
+            const successCount = data.results.filter(r => r.success).length;
+            const text = `Batch processing complete. Total files processed: ${data.total_processed}. Successful analyses: ${successCount}.`;
+            await synthesizeVoice(text, type, 'batch_result.mp3');
+        }
+        
+        async function speakMultiModalResult(type) {
+            if (!window.currentMultiModalResult) return;
+            const data = window.currentMultiModalResult;
+            const text = `Multi-modal analysis complete. Combined confidence: ${(data.combined_confidence * 100).toFixed(0)} percent. Verification status: ${data.verification_status}. DNA prediction: ${data.dna_analysis.prediction}.`;
+            await synthesizeVoice(text, type, 'multimodal_result.mp3');
+        }
+        
+        async function synthesizeVoice(text, type, filename) {
+            try {
+                const response = await fetch('/voice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, type: type })
+                });
+                
+                if (type === 'online') {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
                     a.click();
                 }
             } catch (error) {
@@ -1263,6 +1323,17 @@
                 }
             }
             
+            // Check Comparison results
+            const compResult = document.getElementById('comparison-result');
+            if (compResult && compResult.innerHTML.trim()) {
+                screenContent += 'DNA Comparison Results Found. ';
+                const similarityText = compResult.textContent;
+                if (similarityText.includes('Combined Similarity')) {
+                    const match = similarityText.match(/Combined Similarity: ([\d.]+)%/);
+                    if (match) screenContent += `Similarity: ${match[1]}%. `;
+                }
+            }
+            
             // Check Gel Analysis results
             const gelResult = document.getElementById('gel-analysis-result');
             if (gelResult && gelResult.innerHTML.trim()) {
@@ -1272,14 +1343,39 @@
                 }
             }
             
-            // Check Comparison results
-            const compResult = document.getElementById('comparison-result');
-            if (compResult && compResult.innerHTML.trim()) {
-                screenContent += 'DNA Comparison Results Found. ';
+            // Check Batch Processing results
+            const batchResult = document.getElementById('batch-result');
+            if (batchResult && batchResult.innerHTML.trim()) {
+                screenContent += 'Batch Processing Results Found. ';
+                const batchText = batchResult.textContent;
+                if (batchText.includes('Total Files Processed')) {
+                    const match = batchText.match(/Total Files Processed: (\d+)/);
+                    if (match) screenContent += `Processed ${match[1]} files. `;
+                }
+            }
+            
+            // Check Multi-Modal Analysis results
+            const multiResult = document.getElementById('multimodal-result');
+            if (multiResult && multiResult.innerHTML.trim()) {
+                screenContent += 'Multi-Modal Analysis Results Found. ';
+                const multiText = multiResult.textContent;
+                if (multiText.includes('Combined Confidence')) {
+                    const match = multiText.match(/Combined Confidence: ([\d.]+)%/);
+                    if (match) screenContent += `Combined Confidence: ${match[1]}%. `;
+                }
+            }
+            
+            // Check Dashboard statistics
+            const totalAnalyses = document.getElementById('total-analyses');
+            if (totalAnalyses && totalAnalyses.textContent !== '0') {
+                screenContent += 'Dashboard Statistics Available. ';
+                screenContent += `Total Analyses: ${totalAnalyses.textContent}. `;
+                const highConf = document.getElementById('high-confidence');
+                if (highConf) screenContent += `High Confidence: ${highConf.textContent}. `;
             }
             
             if (!screenContent) {
-                addAIMessage('No analysis results detected on the current screen.\n\nTo get started:\n• Navigate to DNA Analysis tab to analyze sequences\n• Use Gel Analysis for electrophoresis images\n• Try Comparison for sequence matching\n\nOnce you have results, I can provide detailed insights.', 'ai');
+                addAIMessage('No analysis results detected on the current screen.\n\nTo get started:\n• Navigate to DNA Analysis tab to analyze sequences\n• Use Gel Analysis for electrophoresis images\n• Try Comparison for sequence matching\n• Use Batch Processing for multiple files\n• Try Multi-Modal for combined DNA + Face analysis\n\nOnce you have results, I can provide detailed insights.', 'ai');
                 return;
             }
             
