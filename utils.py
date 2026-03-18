@@ -46,11 +46,61 @@ def extract_features(seq):
     return scaler.transform(vec)
 
 def predict_sequence(seq):
-    X = extract_features(seq)
-    pred = best_model.predict(X)[0]
-    proba = best_model.predict_proba(X)[0]
-    confidence = float(max(proba))
-    return {"prediction": str(pred), "confidence": confidence, "probabilities": proba.tolist()}
+    """Analyze DNA sequence with real forensic metrics instead of fake ML predictions"""
+    seq = clean_sequence(seq)
+    
+    # Calculate real DNA metrics
+    gc_content = (seq.count('G') + seq.count('C')) / len(seq) * 100 if len(seq) > 0 else 0
+    at_content = (seq.count('A') + seq.count('T')) / len(seq) * 100 if len(seq) > 0 else 0
+    
+    # Analyze sequence quality
+    quality_score = 0
+    quality_issues = []
+    
+    # Check sequence length
+    if len(seq) < 100:
+        quality_issues.append("Sequence too short for reliable analysis (minimum 100bp recommended)")
+        quality_score += 0.2
+    elif len(seq) < 500:
+        quality_issues.append("Short sequence - results may have limited accuracy")
+        quality_score += 0.5
+    else:
+        quality_score += 0.9
+    
+    # Check GC content (normal human DNA: 40-60%)
+    if 40 <= gc_content <= 60:
+        quality_score += 0.1
+    else:
+        quality_issues.append(f"Unusual GC content ({gc_content:.1f}%) - may indicate contamination or non-human DNA")
+    
+    # Normalize quality score
+    quality_score = min(quality_score, 1.0)
+    
+    # Determine analysis result based on real metrics
+    analysis_result = {
+        "sequence_length": len(seq),
+        "gc_content": round(gc_content, 2),
+        "at_content": round(at_content, 2),
+        "quality_score": round(quality_score, 2),
+        "quality_issues": quality_issues,
+        "analysis_type": "DNA Sequence Analysis",
+        "recommendation": get_forensic_recommendation(quality_score, len(seq), gc_content)
+    }
+    
+    return analysis_result
+
+def get_forensic_recommendation(quality_score, length, gc_content):
+    """Provide forensic recommendations based on sequence analysis"""
+    if quality_score < 0.5:
+        return "UNRELIABLE - Sample quality is too low for forensic use. Re-sampling recommended."
+    elif quality_score < 0.7:
+        return "CAUTION - Results should be verified with additional testing methods."
+    elif length < 500:
+        return "ACCEPTABLE - Sequence is usable but longer sequences would improve reliability."
+    elif not (40 <= gc_content <= 60):
+        return "REVIEW REQUIRED - Unusual GC content may indicate contamination or non-human origin."
+    else:
+        return "RELIABLE - Sequence quality is suitable for forensic analysis."
 
 def compare_sequences(seq1, seq2):
     """Return cosine + sequence similarity between two DNA sequences"""

@@ -56,25 +56,26 @@ def analyze():
             if not sequence:
                 return jsonify({"error": "Could not parse DNA sequence from file"}), 400
         
-        # Perform prediction
-        prediction_result = predict_sequence(sequence)
-        confidence_assessment = assess_confidence(prediction_result['confidence'])
+        # Perform analysis
+        analysis_result = predict_sequence(sequence)
+        quality_assessment = assess_confidence(analysis_result['quality_score'])
         
         # Create visualizations
         kmer_chart = create_kmer_frequency_chart(sequence)
-        confidence_chart = create_confidence_pie_chart(prediction_result['probabilities'])
         
         # Prepare result data
         result_data = {
             'investigator_name': investigator_name,
             'sample_name': sample_name,
             'dna_sequence': sequence[:100] + '...' if len(sequence) > 100 else sequence,
-            'prediction': prediction_result['prediction'],
-            'confidence': prediction_result['confidence'],
-            'confidence_assessment': confidence_assessment,
-            'probabilities': prediction_result['probabilities'],
-            'kmer_chart': kmer_chart,
-            'confidence_chart': confidence_chart
+            'sequence_length': analysis_result['sequence_length'],
+            'gc_content': analysis_result['gc_content'],
+            'at_content': analysis_result['at_content'],
+            'quality_score': analysis_result['quality_score'],
+            'quality_issues': analysis_result['quality_issues'],
+            'recommendation': analysis_result['recommendation'],
+            'quality_assessment': quality_assessment,
+            'kmer_chart': kmer_chart
         }
         
         # Save to database
@@ -148,17 +149,13 @@ def report():
         return jsonify({"error": str(e)}), 500
 
 
-# ---------- RUN SERVER ----------
-if __name__ == "__main__":
-    app.run(debug=True)
-
 # ---------- ROUTE 5: VOICE SYNTHESIS ----------
 @app.route('/voice', methods=['POST'])
 def voice_synthesis():
     try:
         data = request.get_json()
         text = data.get('text', '')
-        voice_type = data.get('type', 'offline')  # offline or online
+        voice_type = data.get('type', 'offline')
         
         if not text:
             return jsonify({"error": "No text provided"}), 400
@@ -193,7 +190,6 @@ def analysis_history():
 def api_history():
     try:
         history = get_analysis_history()
-        # Convert to JSON-friendly format
         history_data = []
         for row in history:
             history_data.append({
@@ -201,8 +197,7 @@ def api_history():
                 'timestamp': row[1],
                 'investigator_name': row[2],
                 'sample_name': row[3],
-                'prediction': row[5],
-                'confidence': row[6]
+                'quality_score': row[6] if len(row) > 6 else 0
             })
         return jsonify(history_data)
     except Exception as e:
@@ -219,16 +214,12 @@ def face_analysis():
         if not file or not allowed_file(file.filename):
             return jsonify({"error": "Invalid image format"}), 400
         
-        # Save uploaded image
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = secure_filename(f"face_{timestamp}_{file.filename}")
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
         
-        # Analyze face
         face_result = analyze_face_from_image(filepath)
-        
-        # Clean up uploaded file
         os.remove(filepath)
         
         return jsonify(face_result)
@@ -240,14 +231,12 @@ def face_analysis():
 @app.route('/multi_factor_analysis', methods=['POST'])
 def multi_factor_analysis():
     try:
-        # Get DNA analysis
         dna_sequence = request.form.get('dna_sequence', '')
         if not dna_sequence:
             return jsonify({"error": "DNA sequence required"}), 400
         
         dna_result = predict_sequence(dna_sequence)
         
-        # Get face analysis if image provided
         face_result = {"face_detected": False}
         if 'face_image' in request.files:
             file = request.files['face_image']
@@ -260,8 +249,16 @@ def multi_factor_analysis():
                 face_result = analyze_face_from_image(filepath)
                 os.remove(filepath)
         
-        # Combine analyses
-        combined_result = combine_dna_face_analysis(dna_result, face_result)
+        combined_confidence = dna_result['quality_score'] * 0.7
+        if face_result.get('face_detected', False):
+            combined_confidence += 0.3
+        
+        combined_result = {
+            'combined_confidence': combined_confidence,
+            'dna_analysis': dna_result,
+            'face_analysis': face_result,
+            'verification_status': 'VERIFIED' if combined_confidence > 0.8 else 'NEEDS_REVIEW'
+        }
         
         return jsonify(combined_result)
         
@@ -272,23 +269,20 @@ def multi_factor_analysis():
 @app.route('/dashboard')
 def dashboard():
     try:
-        # Get recent analysis statistics
         history = get_analysis_history()
-        
-        # Calculate statistics
         total_analyses = len(history)
-        high_confidence_count = sum(1 for row in history if row[6] and row[6] > 0.8)
+        high_quality_count = sum(1 for row in history if len(row) > 6 and row[6] and row[6] > 0.8)
         
         stats = {
             'total_analyses': total_analyses,
-            'high_confidence_analyses': high_confidence_count,
-            'confidence_rate': (high_confidence_count / total_analyses * 100) if total_analyses > 0 else 0
+            'high_quality_analyses': high_quality_count,
+            'quality_rate': (high_quality_count / total_analyses * 100) if total_analyses > 0 else 0
         }
         
         return render_template('dashboard.html', stats=stats, recent_history=history[:10])
         
     except Exception as e:
-        return render_template('dashboard.html', stats={'total_analyses': 0, 'high_confidence_analyses': 0, 'confidence_rate': 0}, recent_history=[])
+        return render_template('dashboard.html', stats={'total_analyses': 0, 'high_quality_analyses': 0, 'quality_rate': 0}, recent_history=[])
 
 # ---------- ROUTE 10: BATCH PROCESSING ----------
 @app.route('/batch_process', methods=['POST'])
@@ -304,14 +298,16 @@ def batch_process():
                 try:
                     sequence = parse_dna_input(file.read(), file.filename)
                     if sequence:
-                        prediction = predict_sequence(sequence)
-                        confidence_assessment = assess_confidence(prediction['confidence'])
+                        analysis = predict_sequence(sequence)
+                        quality_assessment = assess_confidence(analysis['quality_score'])
                         
                         results.append({
                             'filename': file.filename,
-                            'prediction': prediction['prediction'],
-                            'confidence': prediction['confidence'],
-                            'status': confidence_assessment['status'],
+                            'sequence_length': analysis['sequence_length'],
+                            'gc_content': analysis['gc_content'],
+                            'quality_score': analysis['quality_score'],
+                            'status': quality_assessment['status'],
+                            'recommendation': analysis['recommendation'],
                             'success': True
                         })
                     else:
@@ -335,7 +331,6 @@ def batch_process():
 # ---------- ROUTE 11: API ENDPOINTS FOR EXTERNAL ACCESS ----------
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
-    """API endpoint for external applications"""
     try:
         data = request.get_json()
         sequence = data.get('sequence', '')
@@ -344,12 +339,16 @@ def api_predict():
             return jsonify({"error": "DNA sequence required"}), 400
         
         result = predict_sequence(sequence)
-        confidence_assessment = assess_confidence(result['confidence'])
+        quality_assessment = assess_confidence(result['quality_score'])
         
         return jsonify({
-            'prediction': result['prediction'],
-            'confidence': result['confidence'],
-            'status': confidence_assessment['status'],
+            'sequence_length': result['sequence_length'],
+            'gc_content': result['gc_content'],
+            'at_content': result['at_content'],
+            'quality_score': result['quality_score'],
+            'quality_issues': result['quality_issues'],
+            'recommendation': result['recommendation'],
+            'status': quality_assessment['status'],
             'timestamp': datetime.now().isoformat()
         })
         
@@ -358,7 +357,6 @@ def api_predict():
 
 @app.route('/api/compare', methods=['POST'])
 def api_compare():
-    """API endpoint for sequence comparison"""
     try:
         data = request.get_json()
         seq1 = data.get('sequence1', '')
@@ -382,7 +380,6 @@ def api_compare():
 # ---------- ROUTE 12: GEL ELECTROPHORESIS ANALYSIS ----------
 @app.route('/gel_upload', methods=['POST'])
 def gel_upload():
-    """Upload and analyze gel electrophoresis image"""
     try:
         if 'gel_image' not in request.files:
             return jsonify({"error": "No gel image uploaded"}), 400
@@ -391,27 +388,18 @@ def gel_upload():
         if not file or not allowed_gel_file(file.filename):
             return jsonify({"error": "Invalid image format. Use JPG, PNG, BMP, or TIFF"}), 400
         
-        # Save uploaded image
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = secure_filename(f"gel_{timestamp}_{file.filename}")
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
         
-        # Get parameters
         num_lanes = request.form.get('num_lanes')
         num_lanes = int(num_lanes) if num_lanes and num_lanes.isdigit() else None
         
-        # Initialize analyzer
         analyzer = GelElectrophoresisAnalyzer()
         analyzer.load_image(filepath)
-        
-        # Detect lanes
         lanes = analyzer.detect_lanes(num_lanes=num_lanes)
-        
-        # Detect bands
         bands = analyzer.detect_all_bands()
-        
-        # Generate measurements
         measurements = analyzer.measure_bands()
         
         result = {
@@ -431,7 +419,6 @@ def gel_upload():
 
 @app.route('/gel_compare', methods=['POST'])
 def gel_compare():
-    """Compare two lanes in gel electrophoresis"""
     try:
         data = request.get_json()
         image_path = data.get('image_path')
@@ -442,25 +429,21 @@ def gel_compare():
         if not all([image_path, lane1_id is not None, lane2_id is not None]):
             return jsonify({"error": "Missing required parameters"}), 400
         
-        # Initialize analyzer
         analyzer = GelElectrophoresisAnalyzer()
         analyzer.load_image(image_path)
         analyzer.detect_lanes()
         analyzer.detect_all_bands()
         
-        # Perform comparison
         comparison_result = analyzer.compare_lanes(int(lane1_id), int(lane2_id), tolerance_pixels=int(tolerance))
         
         if comparison_result is None:
             return jsonify({"error": "Could not compare specified lanes"}), 400
         
-        # Generate visualization
         viz_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         viz_filename = f"gel_comparison_{viz_timestamp}.png"
         viz_path = os.path.join(UPLOAD_FOLDER, viz_filename)
         
         analyzer.visualize_analysis(comparison_result, save_path=viz_path)
-        
         comparison_result['visualization_path'] = viz_path
         
         return jsonify(comparison_result)
@@ -470,7 +453,6 @@ def gel_compare():
 
 @app.route('/gel_report', methods=['POST'])
 def gel_report():
-    """Generate comprehensive gel analysis report"""
     try:
         data = request.get_json()
         image_path = data.get('image_path')
@@ -478,7 +460,6 @@ def gel_report():
         if not image_path:
             return jsonify({"error": "Image path required"}), 400
         
-        # Process gel image
         result = process_gel_image(
             image_path, 
             compare_lanes=data.get('compare_lanes'),
@@ -489,3 +470,7 @@ def gel_report():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# ---------- RUN SERVER ----------
+if __name__ == "__main__":
+    app.run(debug=True)
