@@ -254,6 +254,15 @@ docker run -p 5000:5000 dna-forensics
 
 ##  Contributing
 
+### For Team Members
+Team members should work on their local cloned copies only. Changes to the main repository require approval.
+
+1. Clone the repository (see Installation & Setup)
+2. Make changes in your local copy
+3. Test thoroughly before requesting merge
+4. Contact the repository owner for integrating changes
+
+### For External Contributors
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit changes (`git commit -m 'Add AmazingFeature'`)
