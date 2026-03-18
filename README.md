@@ -2,6 +2,13 @@
 
 A comprehensive AI-powered DNA forensic analysis platform with advanced features for law enforcement, research, and educational purposes.
 
+## 📚 Documentation
+
+- **[Project Description](PROJECT_DESCRIPTION.md)** - Comprehensive overview of features and capabilities
+- **[Architecture Diagrams](ARCHITECTURE.md)** - System architecture and flow diagrams
+- **[Team Information](AUTHORS.md)** - Project team and contributors
+- **[License](LICENSE)** - MIT License details
+
 ##  Features Overview
 
 ###  1. AI-Based Similarity Matching
@@ -16,49 +23,65 @@ A comprehensive AI-powered DNA forensic analysis platform with advanced features
 - **Detailed Analysis**: Position-specific mutation reporting
 - **Use Case**: Identify genetic variations or damaged DNA regions
 
-###  3. Automated Report Generation
+###  3. Gel Electrophoresis Image Analysis
+- **Image Upload**: Support for JPG, PNG, BMP, TIFF formats
+- **Lane Detection**: Automatic vertical lane identification
+- **Band Detection**: DNA band position and intensity analysis
+- **Similarity Comparison**: Lane-to-lane matching algorithms
+- **Visual Overlay**: Annotated images with detected features
+- **Use Case**: Analyze gel images for DNA fragment comparison
+
+###  4. Automated Report Generation
 - **Comprehensive PDF Reports**: Professional forensic documentation
 - **Detailed Analysis**: Sample info, predictions, confidence scores
 - **Timestamp Tracking**: Complete audit trail
 - **Export Options**: PDF download with custom formatting
 
-###  4. Voice-Based Interaction (AI Assistant)
+###  5. Voice-Based Interaction (AI Assistant)
 - **Offline TTS**: Using pyttsx3 for local text-to-speech
 - **Online TTS**: gTTS integration for high-quality audio
-- **Result Narration**: Automated reading of analysis results
-- **Accessibility**: Makes forensic dashboard accessible
+- **Result Narration**: Automated reading of all analysis results
+- **Multi-Feature Support**: Voice synthesis for DNA Analysis, Comparison, Batch Processing, Multi-Modal Analysis
+- **Accessibility**: Makes forensic dashboard accessible to all users
 
-###  5. Visualization Dashboard
+###  6. Visualization Dashboard
 - **Interactive Charts**: Plotly-powered visualizations
 - **K-mer Frequency Analysis**: Bar charts of genetic patterns
 - **Confidence Distribution**: Pie charts of prediction probabilities
 - **Similarity Metrics**: Visual comparison displays
 
-###  6. Database Integration (SQLite)
+###  7. Database Integration (SQLite)
 - **Complete Data Storage**: DNA sequences, results, timestamps
 - **Investigator Tracking**: User and case management
 - **Analysis History**: Searchable forensic database
 - **Data Export**: CSV and JSON export capabilities
 
-###  7. Facial Recognition Integration
+###  8. Facial Recognition Integration
 - **Multi-Modal Analysis**: DNA + facial feature verification
 - **OpenCV Integration**: Advanced computer vision
 - **Combined Confidence**: Multi-factor authentication scoring
 - **Future Enhancement**: Biometric forensics expansion
 
-###  8. Confidence-Based Filtering
+###  9. Confidence-Based Filtering
 - **Intelligent Thresholds**: Automatic quality assessment
 - **Re-testing Flags**: Low confidence sample identification
 - **Quality Assurance**: Credibility scoring for predictions
 - **Risk Assessment**: Deployment readiness evaluation
 
-###  9. Multiple DNA Input Types
+###  10. Multiple DNA Input Types
 - **Format Support**: .fasta, .txt, manual entry
 - **Auto-Detection**: Intelligent format recognition
 - **Batch Processing**: Multiple file analysis
 - **Error Handling**: Robust input validation
 
-###  10. Cloud/API Deployment Ready
+###  11. Batch Processing
+- **Multiple File Upload**: Process multiple DNA samples simultaneously
+- **Bulk Analysis**: Automated comparison across all samples
+- **Consolidated Reports**: Summary reports for entire batches
+- **Time Efficiency**: Parallel processing for large datasets
+- **Export Options**: CSV and JSON batch results
+
+###  12. Cloud/API Deployment Ready
 - **RESTful APIs**: External system integration
 - **Scalable Architecture**: Cloud deployment ready
 - **Cross-Platform**: Web-based accessibility
@@ -115,6 +138,14 @@ A comprehensive AI-powered DNA forensic analysis platform with advanced features
 3. Click "Compare DNA Sequences"
 4. Review similarity metrics and mutations
 5. Analyze visual similarity charts
+
+###  Gel Electrophoresis Analysis
+1. Go to "Gel Analysis" tab
+2. Upload gel electrophoresis image
+3. Click "Upload and Analyze"
+4. Review detected lanes and bands
+5. Analyze lane similarity scores
+6. Download annotated images
 
 ###  Batch Processing
 1. Select "Batch Processing" tab
@@ -197,6 +228,10 @@ DNA_MATCHING_PROJECT/
 ├── run_system.py            # System launcher
 ├── requirements.txt         # Dependencies
 ├── dna_forensics.db        # SQLite database
+├── ARCHITECTURE.md          # System architecture diagrams
+├── PROJECT_DESCRIPTION.md   # Comprehensive feature documentation
+├── AUTHORS.md               # Team information
+├── LICENSE                  # MIT License
 └── README.md               # This file
 ```
 
@@ -275,16 +310,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ##  Authors
 
-**Vishal Kumar**
--  Full Stack Developer & System Architect
--  AI/ML Engineer
--  contact:vk3785940@gmail.com
+See [AUTHORS.md](AUTHORS.md) for complete team information.
 
-**Venika**
-- Full Stack Developer & System Architect
--  AI/ML Engineer
--  Contact:
--  
+**Lead Developers:**
+- **Venika** - Full Stack Developer & System Architect
+- **Vishal Kumar** - Full Stack Developer & AI/ML Engineer (vk3785940@gmail.com)
+
+**Contributors:**
+- **Sandhya** - Frontend Developer & UI/UX Designer
+- **Ria** - Data Scientist & ML Engineer  
 ##  Acknowledgments
 
 - **BioPython**: DNA sequence processing
@@ -303,6 +337,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [ ] Integration with forensic databases
 - [ ] Advanced statistical analysis
 - [ ] Multi-language support
+- [ ] Enhanced gel image processing with AI
+- [ ] 3D visualization of DNA structures
+- [ ] Integration with CODIS database
+- [ ] Advanced mutation prediction models
 
 ## 📞 Support
 
