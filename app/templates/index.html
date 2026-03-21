@@ -483,62 +483,37 @@
 
         // Display Functions
         function displayAnalysisResult(data) {
-            const confidenceClass = data.confidence > 0.7 ? 'confidence-high' : 'confidence-low';
+            const qualityClass = data.quality_score > 0.7 ? 'confidence-high' : 'confidence-low';
             
             let html = `
                 <h2>🧠 DNA Analysis Results</h2>
-                <div class="confidence-indicator ${confidenceClass}">
-                    <strong>Prediction:</strong> ${data.prediction}<br>
-                    <strong>Confidence:</strong> ${(data.confidence * 100).toFixed(2)}%<br>
-                    <strong>Status:</strong> ${data.confidence_assessment.status}
+                <div class="confidence-indicator ${qualityClass}">
+                    <strong>Sequence Length:</strong> ${data.sequence_length} bp<br>
+                    <strong>GC Content:</strong> ${data.gc_content}%<br>
+                    <strong>AT Content:</strong> ${data.at_content}%<br>
+                    <strong>Quality Score:</strong> ${(data.quality_score * 100).toFixed(2)}%<br>
+                    <strong>Status:</strong> ${data.quality_assessment.status}
                 </div>
             `;
             
-            // Add DNA characteristics if available
-            if (data.dna_characteristics) {
-                const dc = data.dna_characteristics;
+            if (data.quality_issues && data.quality_issues.length > 0) {
                 html += `
-                    <div class="confidence-indicator" style="margin-top: 15px; background: #e3f2fd;">
-                        <h3>🧬 DNA Characteristics</h3>
-                        <strong>DNA Type:</strong> ${dc.dna_type}<br>
-                        <strong>Sequence Length:</strong> ${dc.length} base pairs<br>
-                        <strong>GC Content:</strong> ${dc.gc_content}%<br>
-                        <strong>Quality:</strong> ${dc.quality}<br>
-                        <strong>Base Composition:</strong><br>
-                        &nbsp;&nbsp;A: ${dc.composition.A.toFixed(1)}% | 
-                        T: ${dc.composition.T.toFixed(1)}% | 
-                        G: ${dc.composition.G.toFixed(1)}% | 
-                        C: ${dc.composition.C.toFixed(1)}%
-                    </div>
-                `;
-            }
-            
-            // Add blood group information if available
-            if (data.blood_group) {
-                const bg = data.blood_group;
-                html += `
-                    <div class="confidence-indicator confidence-high" style="margin-top: 15px;">
-                        <h3>🩸 Blood Group Analysis</h3>
-                        <strong>Blood Group:</strong> ${bg.blood_group}<br>
-                        <strong>ABO Type:</strong> ${bg.abo_type}<br>
-                        <strong>Rh Factor:</strong> ${bg.rh_factor}<br>
-                        <strong>Detection Confidence:</strong> ${(bg.confidence * 100).toFixed(1)}%<br>
-                        <strong>Frequency:</strong> ${bg.interpretation.frequency}<br>
-                        <strong>Description:</strong> ${bg.interpretation.description}<br>
-                        <strong>Can Donate To:</strong> ${bg.interpretation.can_donate_to.join(', ')}<br>
-                        <strong>Can Receive From:</strong> ${bg.interpretation.can_receive_from.join(', ')}
+                    <div class="confidence-indicator" style="margin-top: 15px; background: #fff3cd;">
+                        <h3>⚠️ Quality Issues</h3>
+                        <ul>
+                            ${data.quality_issues.map(issue => `<li>${issue}</li>`).join('')}
+                        </ul>
                     </div>
                 `;
             }
             
             html += `
                 <div class="recommendation">
-                    <strong>Recommendation:</strong> ${data.confidence_assessment.recommendation}
+                    <strong>Recommendation:</strong> ${data.recommendation}
                 </div>
                 
                 <div class="charts-container">
                     ${data.kmer_chart}
-                    ${data.confidence_chart}
                 </div>
                 
                 <button onclick="generateReport()" class="report-btn">📄 Generate PDF Report</button>
@@ -602,8 +577,9 @@
                     <thead>
                         <tr>
                             <th>Filename</th>
-                            <th>Prediction</th>
-                            <th>Confidence</th>
+                            <th>Length (bp)</th>
+                            <th>GC Content</th>
+                            <th>Quality Score</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -615,8 +591,9 @@
                     html += `
                         <tr>
                             <td>${result.filename}</td>
-                            <td>${result.prediction}</td>
-                            <td>${(result.confidence * 100).toFixed(2)}%</td>
+                            <td>${result.sequence_length}</td>
+                            <td>${result.gc_content}%</td>
+                            <td>${(result.quality_score * 100).toFixed(2)}%</td>
                             <td>${result.status}</td>
                         </tr>
                     `;
@@ -624,7 +601,7 @@
                     html += `
                         <tr>
                             <td>${result.filename}</td>
-                            <td colspan="3" class="error">❌ ${result.error}</td>
+                            <td colspan="4" class="error">❌ ${result.error}</td>
                         </tr>
                     `;
                 }
@@ -651,8 +628,9 @@
                     
                     <div class="dna-results">
                         <h3>🧬 DNA Analysis</h3>
-                        <p><strong>Prediction:</strong> ${data.dna_analysis.prediction}</p>
-                        <p><strong>Confidence:</strong> ${(data.dna_analysis.confidence * 100).toFixed(2)}%</p>
+                        <p><strong>Sequence Length:</strong> ${data.dna_analysis.sequence_length} bp</p>
+                        <p><strong>GC Content:</strong> ${data.dna_analysis.gc_content}%</p>
+                        <p><strong>Quality Score:</strong> ${(data.dna_analysis.quality_score * 100).toFixed(2)}%</p>
                     </div>
                     
                     <div class="face-results">
@@ -676,7 +654,7 @@
         async function speakResult(type) {
             if (!currentAnalysisResult) return;
             
-            const text = `DNA analysis complete. Prediction: ${currentAnalysisResult.prediction}. Confidence: ${(currentAnalysisResult.confidence * 100).toFixed(0)} percent. Status: ${currentAnalysisResult.confidence_assessment.status}.`;
+            const text = `DNA analysis complete. Sequence length: ${currentAnalysisResult.sequence_length} base pairs. GC content: ${currentAnalysisResult.gc_content} percent. Quality score: ${(currentAnalysisResult.quality_score * 100).toFixed(0)} percent. Status: ${currentAnalysisResult.quality_assessment.status}. Recommendation: ${currentAnalysisResult.recommendation}`;
             
             try {
                 const response = await fetch('/voice', {
