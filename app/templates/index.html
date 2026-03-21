@@ -749,11 +749,11 @@
                 
                 // Update statistics
                 const totalAnalyses = history.length;
-                const highConfidence = history.filter(h => h.confidence > 0.8).length;
-                const successRate = totalAnalyses > 0 ? (highConfidence / totalAnalyses * 100).toFixed(1) : 0;
+                const highQuality = history.filter(h => h.quality_score > 0.8).length;
+                const successRate = totalAnalyses > 0 ? (highQuality / totalAnalyses * 100).toFixed(1) : 0;
                 
                 document.getElementById('total-analyses').textContent = totalAnalyses;
-                document.getElementById('high-confidence').textContent = highConfidence;
+                document.getElementById('high-confidence').textContent = highQuality;
                 document.getElementById('success-rate').textContent = successRate + '%';
                 
                 // Update history table
@@ -766,7 +766,7 @@
                         <td>${new Date(item.timestamp).toLocaleString()}</td>
                         <td>${item.sample_name}</td>
                         <td>${item.prediction}</td>
-                        <td>${(item.confidence * 100).toFixed(1)}%</td>
+                        <td>${(item.quality_score * 100).toFixed(1)}%</td>
                     `;
                 });
                 
@@ -1294,7 +1294,7 @@
             if (dnaResult && dnaResult.innerHTML.trim()) {
                 screenContent += 'DNA Analysis Results Found. ';
                 if (currentAnalysisResult) {
-                    screenContent += `Prediction: ${currentAnalysisResult.prediction}. Confidence: ${(currentAnalysisResult.confidence * 100).toFixed(1)}%. `;
+                    screenContent += `Sequence Length: ${currentAnalysisResult.sequence_length} bp. GC Content: ${currentAnalysisResult.gc_content}%. Quality Score: ${(currentAnalysisResult.quality_score * 100).toFixed(1)}%. `;
                     if (currentAnalysisResult.blood_group) {
                         screenContent += `Blood Group: ${currentAnalysisResult.blood_group.blood_group}. `;
                     }
