@@ -195,8 +195,8 @@ def save_to_database(data):
         data.get('investigator_name', 'Unknown'),
         data.get('sample_name', 'Sample'),
         data.get('dna_sequence', ''),
-        data.get('prediction', ''),
-        data.get('confidence', 0.0),
+        data.get('recommendation', ''),
+        data.get('quality_score', 0.0),
         json.dumps(data.get('similarity_results', {})),
         json.dumps(data.get('mutations', {}))
     ))
